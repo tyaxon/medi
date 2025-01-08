@@ -9,44 +9,85 @@ const firebaseConfig = {
     measurementId: "G-HP6CDNHSYS"
   };
   
-  // Inicializar Firebase
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore(app);
+  // Inicializa Firebase
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore(app);
+
+// Elementos de la interfaz
+const medList = document.getElementById('medList');
+const addMedicationBtn = document.getElementById('addMedicationBtn');
+const nextDoseTimer = document.getElementById('nextDoseTimer');
+
+// Función para actualizar el listado de medicamentos
+function updateMedicationList() {
+  // Limpia la lista actual
+  medList.innerHTML = '';
   
-  // Referencia a la colección de medicamentos en Firestore
-  const medicationsRef = db.collection('medications');
-  
-  // Elementos del DOM
-  const addMedicationBtn = document.getElementById('addMedicationBtn');
-  const nextDoseTimer = document.getElementById('nextDoseTimer');
-  const medicationList = document.getElementById('medicationList');
-  
-  // Lista para almacenar los medicamentos
-  let medications = [];
-  
-  // Función para actualizar la lista de medicamentos en la interfaz
-  function updateMedicationList() {
-    medicationList.innerHTML = '';
-    medications.forEach(med => {
-      const li = document.createElement('li');
-      li.textContent = `${med.name} - ${med.time}`;
-      medicationList.appendChild(li);
+  // Obtener los medicamentos de Firestore
+  db.collection("medications").get().then((querySnapshot) => {
+    querySnapshot.forEach((doc) => {
+      const med = doc.data();
+      const medItem = document.createElement('li');
+      medItem.classList.add('med-item');
+      
+      if (med.done) {
+        medItem.classList.add('done');
+      }
+
+      medItem.innerHTML = `
+        <span>${med.name} - ${med.time}</span>
+        <button class="button" onclick="markAsDone('${doc.id}')">${med.done ? 'Hecho' : 'Marcar como Hecho'}</button>
+      `;
+      medList.appendChild(medItem);
     });
+
+    // Actualizar el siguiente temporizador
     updateNextDose();
-  }
+  });
+}
+
+// Función para agregar un medicamento
+addMedicationBtn.addEventListener('click', () => {
+  const medName = "Tafirol";  // Cambiar según el medicamento
+  const medTime = new Date().toLocaleString(); // Hora actual
   
-  // Función para actualizar el temporizador de la siguiente dosis
-  function updateNextDose() {
-    const lastMed = medications[medications.length - 1];
+  // Crear un nuevo medicamento
+  const newMed = {
+    name: medName,
+    time: medTime,
+    done: false
+  };
+  
+  // Agregar a Firestore
+  db.collection("medications").add(newMed).then(() => {
+    updateMedicationList();
+  });
+});
+
+// Función para marcar un medicamento como hecho
+function markAsDone(docId) {
+  const medRef = db.collection("medications").doc(docId);
+
+  medRef.update({
+    done: true
+  }).then(() => {
+    updateMedicationList();
+  });
+}
+
+// Función para actualizar el temporizador del siguiente medicamento
+function updateNextDose() {
+  db.collection("medications").orderBy("time", "desc").limit(1).get().then((querySnapshot) => {
+    const lastMed = querySnapshot.docs[0]?.data();
+    
     if (!lastMed) {
-      nextDoseTimer.textContent = 'Añade un medicamento para comenzar.';
+      nextDoseTimer.textContent = `Añade un medicamento para comenzar.`;
       return;
     }
-  
-    // La siguiente dosis siempre será 4 horas después de la última dosis
-    const nextMedTime = new Date(lastMed.time).getTime() + 4 * 60 * 60 * 1000;
+
+    const nextMedTime = new Date(lastMed.time).getTime() + 3 * 60 * 60 * 1000;
     const timeRemaining = nextMedTime - new Date().getTime();
-  
+
     if (timeRemaining <= 0) {
       nextDoseTimer.textContent = `¡Es hora de tomar ${lastMed.done ? 'Ibuprofeno' : 'Tafirol'}!`;
     } else {
@@ -54,46 +95,8 @@ const firebaseConfig = {
       const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60)); // minutos
       nextDoseTimer.textContent = `Siguiente dosis en: ${hours} horas y ${minutes} minutos.`;
     }
-  }
-  
-  // Función para agregar un medicamento a Firebase y actualizar la lista
-  addMedicationBtn.addEventListener('click', async () => {
-    const lastMed = medications[medications.length - 1];
-    let newTime;
-    
-    if (lastMed) {
-      // Si ya hay medicamentos, tomamos el último y sumamos 4 horas
-      newTime = new Date(lastMed.time).getTime() + 4 * 60 * 60 * 1000;
-    } else {
-      // Si no hay medicamentos previos, comenzamos desde la hora actual
-      newTime = new Date().getTime() + 4 * 60 * 60 * 1000;
-    }
-  
-    const medName = lastMed && lastMed.done ? 'Ibuprofeno' : 'Tafirol';
-    const newMed = {
-      name: medName,
-      time: new Date(newTime).toLocaleString(),
-      done: false
-    };
-  
-    // Agregar el nuevo medicamento a Firebase
-    await medicationsRef.add(newMed);
-  
-    // Actualizar la lista local y la interfaz
-    medications.push(newMed);
-    updateMedicationList();
   });
-  
-  // Función para obtener medicamentos desde Firebase
-  async function getMedications() {
-    const snapshot = await medicationsRef.get();
-    medications.length = 0; // Limpiar la lista de medicamentos
-    snapshot.forEach(doc => {
-      medications.push(doc.data());
-    });
-    updateMedicationList();
-  }
-  
-  // Inicializar y obtener medicamentos desde Firebase al cargar la página
-  getMedications();
-  
+}
+
+// Inicializar el contador
+updateMedicationList();

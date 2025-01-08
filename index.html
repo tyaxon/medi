@@ -3,16 +3,99 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestión de Medicamentos</title>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  <title>Contador de Medicamentos - Firebase</title>
+  
+  <!-- Agregar Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
+  
+  <style>
+    /* El estilo aquí puede ser el que ya tenías */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f7f7f7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #333;
+      text-align: center;
+    }
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      animation: fadeIn 1s ease-out;
+      width: 300px;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+      color: #3498db;
+    }
+    .med-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .med-item {
+      background-color: #f1f1f1;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      animation: slideIn 1s ease-out;
+    }
+    .med-item.done {
+      background-color: #a9dfbf;
+      color: #27ae60;
+      text-decoration: line-through;
+    }
+    .button {
+      background-color: #3498db;
+      color: #fff;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .button:hover {
+      background-color: #2980b9;
+    }
+    .timer {
+      font-size: 1.2rem;
+      margin-top: 20px;
+      color: #f39c12;
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    @keyframes slideIn {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(0); }
+    }
+  </style>
 </head>
 <body>
-  <h1>Gestionar Medicamentos</h1>
-  <button id="addMedicationBtn">Agregar Medicamento</button>
-  <p id="nextDoseTimer"></p>
-  <ul id="medicationList"></ul>
 
-  <script src="script.js"></script>
+  <div class="container">
+    <h1>Contador de Medicamentos - Firebase</h1>
+    <ul class="med-list" id="medList"></ul>
+    <button class="button" id="addMedicationBtn">Agregar Medicamento</button>
+    <div class="timer" id="nextDoseTimer"></div>
+  </div>
+
+  <script src="js/script.js"></script>
 </body>
 </html>
